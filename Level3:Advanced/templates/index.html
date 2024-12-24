@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Interactive Web Scraper</title>
+    <style>
+      body {
+        font-family: Arial, Helvetica, sans-serif;
+        margin: 20px;
+      }
+      h1 {
+        text-align: center;
+        margin: auto;
+        padding-bottom: 10px;
+      }
+      form {
+        max-width: 400px;
+        margin: auto;
+        padding: 20px;
+        border: 2px solid #ccc;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      }
+      input,
+      button {
+        width: 100%;
+        padding: 10px;
+        margin: 10px -10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+      }
+      button {
+        background-color: #28a745;
+        color: white;
+        font-size: 16px;
+        cursor: pointer;
+      }
+      button:hover {
+        background-color: #218838;
+      }
+      #downloadLink {
+        text-align: center;
+        margin: 10px auto;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Interactive Web Scraper</h1>
+    <form method="post" action="/scrape" id="scrapeForm">
+      <label for="url">Website URL:</label>
+      <input type="url" id="url" name="url" required />
+
+      <label for="tag">HTML Tag:</label>
+      <input type="text" id="tag" name="tag" required />
+
+      <label for="class_name">Class Name (optional):</label>
+      <input type="text" id="class_name" name="class_name" />
+
+      <button type="button" onclick="submitScrape()">Scrape</button>
+    </form>
+    <div id="result"></div>
+    <div id="downloadLink">
+      <a href="/download" target="_blank">Download CSV</a>
+    </div>
+    <script>
+      function submitScrape() {
+        const url = document.getElementById("url").value;
+        const tag = document.getElementById("tag").value;
+        const class_name = document.getElementById("class_name").value;
+
+        fetch("/scrape", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url, tag, class_name }),
+        })
+          .then((response) => {
+            if (!response.ok) {
+              throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+          })
+          .then((responseData) => {
+            const scrapedData = responseData.data;
+            const resultDiv = document.getElementById("result");
+
+            if (scrapedData && scrapedData.length > 0) {
+              resultDiv.innerHTML =
+                "<h2>Scraped Data:</h2><ul>" +
+                scrapedData.map((item) => `<li>${item}</li>`).join("") +
+                "</ul>";
+              document.getElementById("downloadLink").style.display = "block";
+            } else {
+              resultDiv.innerHTML =
+                "<p style='color: red;'>No data found for the given inputs.</p>";
+              document.getElementById("downloadLink").style.display = "none";
+            }
+          })
+          .catch((error) => {
+            document.getElementById(
+              "result"
+            ).innerHTML = `<p style="color: red;">Error: ${error.message}</p>`;
+            document.getElementById("downloadLink").style.display = "none";
+          });
+      }
+    </script>
+  </body>
+</html>
